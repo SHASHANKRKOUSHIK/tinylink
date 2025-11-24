@@ -2,12 +2,19 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import prisma from "../../../lib/prisma";
 
-type Link = {
+/**
+ * NOTE
+ * - We fetch DB rows which contain Date objects (createdAt, lastClicked).
+ * - For the API response we convert dates to ISO strings, and expose `clicks`.
+ * - This keeps TypeScript happy (no Date vs string mismatch) and returns stable JSON.
+ */
+
+type LinkResponse = {
   code: string;
   longUrl: string;
-  clickCount: number;
-  lastClicked: Date | null;
-  createdAt: Date;
+  clicks: number;
+  lastClicked: string | null;
+  createdAt: string;
 };
 
 function isValidCode(code: string) {
@@ -16,7 +23,6 @@ function isValidCode(code: string) {
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === "POST") {
-    // accept both `code` and `customCode` from clients
     const { longUrl, code, customCode } = req.body ?? {};
 
     if (!longUrl || typeof longUrl !== "string") {
@@ -72,24 +78,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
       });
 
-      return res.status(201).json(created);
+      // convert DB dates to ISO strings for JSON response
+      const result: LinkResponse = {
+        code: created.code,
+        longUrl: created.longUrl,
+        clicks: (created as any).clickCount ?? 0,
+        lastClicked: (created as any).lastClicked ? (created as any).lastClicked.toISOString() : null,
+        createdAt: (created as any).createdAt ? (created as any).createdAt.toISOString() : new Date().toISOString(),
+      };
+
+      return res.status(201).json(result);
     } catch (err) {
       console.error("POST /api/links error:", err);
       return res.status(500).json({ error: "Server error" });
     }
   } else if (req.method === "GET") {
     try {
-      const links: Link[] = await prisma.link.findMany({
+      // fetch raw DB rows (these contain Date objects)
+      const dbLinks = await prisma.link.findMany({
         orderBy: { createdAt: "desc" },
       });
 
-      // normalized response for frontend (frontend expects clicks)
-      const normalized = links.map((l) => ({
+      // normalize for API: convert Dates -> ISO strings, expose `clicks`
+      const normalized: LinkResponse[] = dbLinks.map((l) => ({
         code: l.code,
         longUrl: l.longUrl,
-        clicks: typeof l.clickCount === "number" ? l.clickCount : 0,
-        lastClicked: l.lastClicked ?? null,
-        createdAt: l.createdAt,
+        clicks: typeof (l as any).clickCount === "number" ? (l as any).clickCount : 0,
+        lastClicked: l.lastClicked ? l.lastClicked.toISOString() : null,
+        createdAt: l.createdAt ? l.createdAt.toISOString() : new Date().toISOString(),
       }));
 
       return res.status(200).json(normalized);
