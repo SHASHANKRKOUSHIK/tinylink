@@ -6,8 +6,8 @@ type Link = {
   code: string;
   longUrl: string;
   clickCount: number;
-  lastClicked?: string | null;
-  createdAt: string;
+  lastClicked: Date | null;
+  createdAt: Date;
 };
 
 function isValidCode(code: string) {
