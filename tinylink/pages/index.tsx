@@ -1,3 +1,4 @@
+// pages/index.tsx
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import LinkTable, { LinkItem } from "../components/LinkTable";
@@ -8,9 +9,6 @@ export default function DashboardPage() {
   const [customCode, setCustomCode] = useState("");
   const [error, setError] = useState("");
 
-  // --------------------------------------------------------------------
-  // LOAD LINKS FROM DATABASE
-  // --------------------------------------------------------------------
   async function fetchLinks() {
     setError("");
     try {
@@ -26,15 +24,12 @@ export default function DashboardPage() {
     fetchLinks();
   }, []);
 
-  // --------------------------------------------------------------------
-  // CREATE SHORT LINK
-  // --------------------------------------------------------------------
   async function createLink() {
     setError("");
     try {
       await axios.post("/api/links", {
         longUrl,
-        customCode: customCode || undefined,
+        code: customCode || undefined,
       });
 
       setLongUrl("");
@@ -46,9 +41,6 @@ export default function DashboardPage() {
     }
   }
 
-  // --------------------------------------------------------------------
-  // DELETE LINK
-  // --------------------------------------------------------------------
   async function deleteLink(code: string) {
     try {
       await axios.delete(`/api/links/${code}`);
@@ -58,9 +50,6 @@ export default function DashboardPage() {
     }
   }
 
-  // --------------------------------------------------------------------
-  // COPY SHORT URL
-  // --------------------------------------------------------------------
   function copyLink(code: string) {
     const shortUrl = `${window.location.origin}/${code}`;
     navigator.clipboard.writeText(shortUrl);
@@ -76,13 +65,7 @@ export default function DashboardPage() {
         fontFamily: "Inter, sans-serif",
       }}
     >
-      {/* ------------------- CENTERED DASHBOARD HEADER ------------------- */}
-      <div
-        style={{
-          textAlign: "center",
-          marginBottom: "40px",
-        }}
-      >
+      <div style={{ textAlign: "center", marginBottom: "40px" }}>
         <h1 style={{ fontSize: "32px", fontWeight: 700 }}>
           TinyLink — Dashboard
         </h1>
@@ -91,13 +74,7 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      {/* ---------------------- CENTERED CARD WRAPPER --------------------- */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-        }}
-      >
+      <div style={{ display: "flex", justifyContent: "center" }}>
         <div
           style={{
             width: "100%",
@@ -111,9 +88,7 @@ export default function DashboardPage() {
         >
           <h2>Shorten a long link</h2>
 
-          <p style={{ color: "#444", marginBottom: "10px" }}>
-            Paste your long link and create a short code.
-          </p>
+          {/* removed "No credit card required" per your request */}
 
           <input
             placeholder="https://example.com/my-long-url"
@@ -154,7 +129,7 @@ export default function DashboardPage() {
               fontWeight: 600,
             }}
           >
-            Get your shortend link
+            Create Short Link
           </button>
 
           <p style={{ fontSize: "13px", marginTop: "12px", color: "#555" }}>
@@ -162,20 +137,16 @@ export default function DashboardPage() {
             Tip: leave code empty to auto-generate
           </p>
 
-          {error && (
-            <p style={{ color: "red", marginTop: "10px" }}>{error}</p>
-          )}
+          {error && <p style={{ color: "red", marginTop: "10px" }}>{error}</p>}
         </div>
       </div>
 
-      {/* ---------------- Links table (replaced with organized LinkTable component) ---------------- */}
       <section style={{ marginTop: 40, maxWidth: 1100, marginInline: "auto", paddingInline: 20 }}>
         <h3 style={{ color: "#fff", marginBottom: 12 }}>Links</h3>
 
         <LinkTable
           links={links as LinkItem[]}
           onCopy={(code) => {
-            // copy implementation (same as before)
             const short = `${window.location.origin}/${code}`;
             navigator.clipboard.writeText(short);
           }}
@@ -183,11 +154,9 @@ export default function DashboardPage() {
             window.open(`/${code}`, "_blank");
           }}
           onStats={(code) => {
-            // open stats page (change path if your stats route differs)
             window.location.href = `/code/${code}`;
           }}
           onDelete={(code) => {
-            // call your delete function
             deleteLink(code);
           }}
         />
