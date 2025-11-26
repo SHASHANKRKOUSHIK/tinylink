@@ -1,14 +1,13 @@
+
 {
   "name": "tinylink",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-  "dev": "next dev",
-  "build": "cross-env CSS_TRANSFORMER_WASM=1 next build",
-  "start": "next start",
-  "lint": "next lint"
-}
-
+    "dev": "next dev",
+    "build": "cross-env CSS_TRANSFORMER_WASM=1 next build",
+    "start": "next start",
+    "lint": "next lint"
   },
   "dependencies": {
     "@prisma/client": "^4.16.2",
